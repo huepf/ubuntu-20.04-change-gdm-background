@@ -13,12 +13,16 @@ gdm3Resource=/usr/share/gnome-shell/gdm3-theme.gresource
 [ ! -f "$gdm3Resource"~ ] && cp $gdm3Resource $gdm3Resource~
 
 # Restore the original gdm3 theme.
-[ "$1" = "--restore" ] && mv $gdm3Resource~ $gdm3Resource
-if [ "$?" -eq 0 ]; then 
-    echo 'GDM background sucessfully restored.'
-    echo 'Restart GDM service to apply change.'
+restore () {
+  mv $gdm3Resource~ $gdm3Resource
+  chmod 644 $gdm3Resource
+  if [ "$?" -eq 0 ]; then 
+    echo 'GDM backup restored.'
     exit 0
-fi
+  fi
+}
+
+[ "$1" = "--restore" ] && restore
 
 # Test if argument is an image file.
 if [[ $(file --mime-type -b "$1") == image/*g ]]; then
@@ -77,8 +81,13 @@ EOF
 
     # Check if gresource was sucessfuly moved to its default folder.
     if [ "$?" -eq 0 ]; then
-	echo 'GDM background sucessfuly changed.'
-	echo 'Restart GDM service to apply change.'
+      chmod 644 $gdm3Resource
+	  echo 'GDM background sucessfuly changed.'
+	  echo 'Restart GDM service to apply change.'
+    else
+      echo 'Something went wrong.'
+      restore
+      echo 'No changes were applied.'
     fi
 
 else
